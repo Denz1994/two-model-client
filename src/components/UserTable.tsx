@@ -3,38 +3,47 @@ import React from "react";
 class UserTable extends React.Component{
     
     state = {
-        userData: [
-            { id: 1, name: 'John', age: 30 },
-            { id: 2, name: 'Sara', age: 25 },
-            { id: 3, name: 'Mike', age: 35, }
-        ],
-        
-        formDataEntries: {
-            id:'',
-            name:'',
-            age:'',
-            birth:''
-        }
+        userData: [],
+        formDataEntries: {firstName:null, lastName:null, start:null, end:null, profession:null}
     }
-    udpateUsers = ()=>{}
 
-    onSubmit = (event:any) => {
-        event.preventDefault();
-        fetch('http://localhost:3001/users/')
+    buildPath = (formEntries:any):string=>{
+        const {firstName, lastName, start, end, profession } = formEntries;
+        const host = `http://localhost:3001`;
+        let endPoint = '/users'
+        if (firstName && lastName){
+            endPoint = `/users/name/${firstName}/${lastName}`;
+        }
+        else if(firstName == null && lastName == null && profession == null && start && end){
+            endPoint = `/users/date/${start}/${end}`;
+        }
+        else if(profession && firstName == null && lastName == null && start== null && end==null){
+            endPoint = `/users/profession/${profession}`;
+        }
+        return host + endPoint
+    }
+
+    onSubmit = async (event:any) => {
+        event.preventDefault();        
+        const path = this.buildPath(this.state.formDataEntries); 
+        console.log('Fetching at path = ', path)
+        await fetch(path)
             .then(res=>res.json())
             .then(data => {
-                this.state.userData = data[0]
+                this.state.userData = data
+                console.log('Fetched data = ', this.state.userData)
             })
             .catch(err=>console.log(err));
-        this.setState({ formData: {
+            this.setState({ formDataEntries: {
             ...this.state.formDataEntries,
             [event.target.name]: event.target.value 
             }
-         });
-      }
 
-    onChangeHandler = (event:any) => {
-        this.setState({ formData: {
+         });
+        }
+    
+    onChangeHandler = async (event:any) => {
+        await this.setState({ formDataEntries: {
             ...this.state.formDataEntries,
             [event.target.name]: event.target.value 
             }
@@ -47,24 +56,24 @@ class UserTable extends React.Component{
             <form onSubmit={this.onSubmit}>
                 <label>
                     First Name:
-                    <input type="text" name="First Name" onChange={this.onChangeHandler}/>
+                    <input type="text" name="firstName" onChange={this.onChangeHandler}/>
                 </label>
                 <br />
                 <label>
                     Last Name:
-                    <input type="text" name="Last Name" onChange={this.onChangeHandler}/>
+                    <input type="text" name="lastName" onChange={this.onChangeHandler}/>
                 </label>
                 <label>
                     Start:
-                    <input type="date" name="Start" onChange={this.onChangeHandler}/>
+                    <input type="date" name="start" onChange={this.onChangeHandler}/>
                 </label>
                 <label>
                     End:
-                    <input type="date" name="End" onChange={this.onChangeHandler}/>
+                    <input type="date" name="end" onChange={this.onChangeHandler}/>
                 </label>
                 <label>
                     Profession:
-                    <input type="text" name="Profession" onChange={this.onChangeHandler}/>
+                    <input type="text" name="profession" onChange={this.onChangeHandler}/>
                 </label>
                 <br />
                 <button type="submit">Submit</button>
